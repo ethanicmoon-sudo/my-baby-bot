@@ -10,6 +10,9 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { registerRealtime } from "../platform/realtime";
 import { logDbStrategy } from "../platform/dbStrategy";
+import { ENV } from "./env";
+import { pingDatabase } from "../db";
+import { isRedisConfigured, pingRedis } from "../platform/queue";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -33,6 +36,29 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  app.set("trust proxy", true);
+
+  app.use((req, res, next) => {
+    if (!ENV.corsOrigin) {
+      return next();
+    }
+
+    const requestOrigin = req.headers.origin;
+    if (requestOrigin === ENV.corsOrigin) {
+      res.setHeader("Access-Control-Allow-Origin", ENV.corsOrigin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    }
+
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(204);
+    }
+
+    return next();
+  });
+
   registerRealtime(server);
   logDbStrategy();
   // Configure body parser with larger size limit for file uploads
@@ -48,6 +74,38 @@ async function startServer() {
       createContext,
     })
   );
+
+  app.get("/healthz", (_req, res) => {
+    res.status(200).json({
+      status: "ok",
+      service: "api",
+      ts: new Date().toISOString(),
+    });
+  });
+
+  app.get("/readyz", async (_req, res) => {
+    const dbConfigured = Boolean(ENV.databaseUrl);
+    const redisConfigured = isRedisConfigured();
+    const jwtSecretConfigured = Boolean(ENV.cookieSecret);
+    const dbAlive = dbConfigured ? await pingDatabase() : false;
+    const redisAlive = redisConfigured ? await pingRedis() : false;
+    const ready = dbConfigured && redisConfigured && jwtSecretConfigured && dbAlive && redisAlive;
+
+    res.status(ready ? 200 : 503).json({
+      status: ready ? "ready" : "not_ready",
+      checks: {
+        database: {
+          configured: dbConfigured,
+          alive: dbAlive,
+        },
+        redis: {
+          configured: redisConfigured,
+          alive: redisAlive,
+        },
+        jwtSecretConfigured,
+      },
+    });
+  });
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
@@ -63,7 +121,8 @@ async function startServer() {
   }
 
   server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
+    const baseUrl = ENV.appBaseUrl || `http://localhost:${port}`;
+    console.log(`Server running on ${baseUrl} (bind port ${port})`);
   });
 }
 

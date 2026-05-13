@@ -12,6 +12,20 @@ const queue = redisConnection
     })
   : null;
 
+export function isRedisConfigured() {
+  return Boolean(redisUrl);
+}
+
+export async function pingRedis(): Promise<boolean> {
+  if (!redisConnection) return false;
+  try {
+    const result = await redisConnection.ping();
+    return result === "PONG";
+  } catch {
+    return false;
+  }
+}
+
 export async function enqueueJob(name: string, data: Json) {
   if (!queue) {
     return {
@@ -34,4 +48,3 @@ export async function enqueueJob(name: string, data: Json) {
     data,
   } as const;
 }
-

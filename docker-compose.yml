@@ -6,6 +6,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
       VITE_APP_ID: ${VITE_APP_ID}
       DB_STRATEGY: postgres
       DATABASE_URL: ${DATABASE_URL}
@@ -24,8 +26,6 @@ services:
       BINANCE_RECV_WINDOW: ${BINANCE_RECV_WINDOW:-5000}
     depends_on:
       - redis
-    ports:
-      - "3000:3000"
 
   redis:
     image: redis:7-alpine

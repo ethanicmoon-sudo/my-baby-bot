@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import {
   InsertUser,
@@ -33,6 +33,17 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+export async function pingDatabase(): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    await db.execute(sql`select 1`);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {

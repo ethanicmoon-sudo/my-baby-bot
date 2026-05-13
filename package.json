@@ -11,6 +11,8 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:serial": "vitest run --maxWorkers=1 --minWorkers=1 --no-file-parallelism",
+    "preflight:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/preflight.ps1",
+    "deploy:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy.ps1",
     "supabase": "supabase",
     "supabase:link": "supabase link --project-ref fazuioenmndbsrfungou",
     "db:push": "drizzle-kit generate && drizzle-kit migrate"

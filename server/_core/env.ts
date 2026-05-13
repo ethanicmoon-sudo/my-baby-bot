@@ -1,5 +1,7 @@
 export const ENV = {
   appId: process.env.VITE_APP_ID ?? "",
+  appBaseUrl: process.env.APP_BASE_URL ?? "",
+  corsOrigin: process.env.CORS_ORIGIN ?? "",
   cookieSecret: process.env.JWT_SECRET ?? "",
   databaseUrl: process.env.DATABASE_URL ?? "",
   dbStrategy: process.env.DB_STRATEGY ?? "postgres",
