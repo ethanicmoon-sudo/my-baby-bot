@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1778612811781,
+      "tag": "0000_lame_jetstream",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1778639550816,
+      "tag": "0001_clear_squadron_sinister",
+      "breakpoints": true
+    }
+  ]
+}
